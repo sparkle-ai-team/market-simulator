@@ -33,7 +33,6 @@
         <div class="lg:col-span-2 space-y-8">
             
             <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#8A9DBB]/10 relative">
-                <div class="absolute -top-12 -right-12 w-32 h-32 bg-[#FFF1C2]/20 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div>
@@ -64,6 +63,7 @@
                 <div class="h-64 mt-8 px-4 flex items-end justify-center relative border-b border-[#F5F7FA]">
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 1000 250">
                         <path id="chart-path" d="M 0 180 L 100 160 L 200 220 L 300 130 L 400 200 L 500 150 L 600 110 L 700 170 L 800 90 L 900 120 L 985 70" fill="none" stroke="#709DFF" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
+                        
                         <circle id="chart-pulse-dot" cx="985" cy="70" r="4.5" fill="#1E3557" />
                     </svg>
                 </div>
@@ -158,13 +158,79 @@
     <script>
         const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd&include_24hr_change=true';
         let currentTradeType = 'BUY'; 
+        let selectedTimeline = '1D';
 
-        let state = JSON.parse(localStorage.getItem('chic_market_state_v4')) || {
-            cash: 10000.00,
-            holdings: {}
-        };
+        // Bulletproof localStorage read block to completely prevent button freeze errors
+        let state = { cash: 10000.00, holdings: {} };
+        try {
+            const saved = localStorage.getItem('chic_market_state_v5');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && typeof parsed.cash === 'number') state = parsed;
+            }
+        } catch (e) {
+            console.warn("Storage reset executed successfully");
+        }
 
         let livePrices = {
             'BTC': { price: 65000, change: 1.5 },
             'ETH': { price: 3500, change: -0.4 },
-            'SOL': { price
+            'SOL': { price: 150, change: 4.2 },
+            'DOGE': { price: 0.12, change: 0.8 }
+        };
+
+        function saveState() {
+            localStorage.setItem('chic_market_state_v5', JSON.stringify(state));
+        }
+
+        function setTradeType(type) {
+            currentTradeType = type;
+            const buyBtn = document.getElementById('btn-toggle-buy');
+            const sellBtn = document.getElementById('btn-toggle-sell');
+            const submitBtn = document.getElementById('main-submit-btn');
+
+            if (type === 'BUY') {
+                buyBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
+                sellBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
+                submitBtn.innerText = "EXECUTE BUY";
+                submitBtn.className = "bg-[#1E3557] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl hover:opacity-90 transition-all";
+            } else {
+                sellBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
+                buyBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
+                submitBtn.innerText = "EXECUTE SELL";
+                submitBtn.className = "bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-4 py-2.5 rounded-xl hover:brightness-95 transition-all";
+            }
+        }
+
+        async function fetchMarketData() {
+            try {
+                const response = await fetch(API_URL);
+                const data = await response.json();
+                
+                if(data && data.bitcoin) {
+                    livePrices['BTC'] = { price: data.bitcoin.usd || 65000, change: data.bitcoin.usd_24h_change || 0 };
+                    livePrices['ETH'] = { price: data.ethereum.usd || 3500, change: data.ethereum.usd_24h_change || 0 };
+                    livePrices['SOL'] = { price: data.solana.usd || 150, change: data.solana.usd_24h_change || 0 };
+                    livePrices['DOGE'] = { price: data.dogecoin.usd || 0.12, change: data.dogecoin.usd_24h_change || 0 };
+                }
+            } catch (err) {
+                console.error("Connection sync delay active", err);
+            }
+            updateUiCore();
+        }
+
+        function updateUiCore() {
+            document.getElementById('buying-power-display').innerText = `Cash: $${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            
+            let currentHoldingsValue = 0;
+            for (const [ticker, assetData] of Object.entries(state.holdings)) {
+                if (assetData && assetData.qty > 0 && livePrices[ticker]) {
+                    currentHoldingsValue += assetData.qty * livePrices[ticker].price;
+                }
+            }
+
+            let totalPortfolioValue = state.cash + currentHoldingsValue;
+            document.getElementById('portfolio-value').innerText = `$${totalPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            let totalProfit = totalPortfolioValue - 10000.00;
+            let profitPercent = (totalProfit / 1
