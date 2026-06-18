@@ -5,182 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robinhood Market Simulator Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        market: {
-                            bg: '#F2F4F7',
-                            navy: '#2D4D7A',
-                            slate: '#B7C7E6',
-                            blue: '#9BBEFF',
-                            yellow: '#FFEAA0', 
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        @keyframes pulse-dot {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.4); opacity: 0.6; }
+        @keyframes subtle-glow {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.6); opacity: 0; }
         }
-        .live-dot {
+        .pulse-ring {
             transform-origin: center;
-            animation: pulse-dot 2s infinite ease-in-out;
+            animation: subtle-glow 2s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="bg-[#F2F4F7] text-[#2D4D7A] font-sans antialiased min-h-screen pb-12">
+<body class="bg-[#F5F7FA] text-[#1E3557] font-sans antialiased min-h-screen pb-16">
 
-    <nav class="bg-white border-b border-[#B7C7E6]/40 sticky top-0 z-50 px-6 py-4">
+    <nav class="bg-white border-b border-[#8A9DBB]/20 sticky top-0 z-50 px-6 py-4">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-6 w-full sm:w-auto">
-                <div class="text-2xl font-black tracking-tighter text-[#2D4D7A]">ROBINHOOD<span class="text-[#9BBEFF] font-light">.SIM</span></div>
+                <div class="text-xl font-black tracking-tighter text-[#1E3557] uppercase">ROBINHOOD<span class="text-[#709DFF] font-light">.SIM</span></div>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" placeholder="Search Ticker Symbols (e.g. BTC, ETH)" class="w-full bg-[#F2F4F7] text-xs font-bold rounded-xl px-4 py-2.5 focus:outline-none border-2 border-transparent focus:border-[#FFEAA0] transition-all">
+                    <input type="text" placeholder="Search markets..." class="w-full bg-[#F5F7FA] text-xs font-semibold rounded-full px-5 py-2.5 focus:outline-none border border-transparent focus:border-[#FFF1C2] transition-all">
                 </div>
             </div>
             
-            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-4">
-                <div class="flex space-x-2">
-                    <button onclick="setTradeType('BUY')" id="btn-toggle-buy" class="bg-[#2D4D7A] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">BUY ASSET</button>
-                    <button onclick="setTradeType('SELL')" id="btn-toggle-sell" class="bg-white text-[#2D4D7A] border border-[#B7C7E6] text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#F2F4F7] transition-all">SELL ASSET</button>
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto space-x-6">
+                <div class="flex space-x-2 bg-[#F5F7FA] p-1 rounded-xl">
+                    <button onclick="setTradeType('BUY')" id="btn-toggle-buy" class="bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm">BUY</button>
+                    <button onclick="setTradeType('SELL')" id="btn-toggle-sell" class="bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all">SELL</button>
                 </div>
-                <div class="h-6 w-px bg-[#B7C7E6]/40 hidden md:block"></div>
-                <div class="flex items-center space-x-2">
-                    <button class="text-xs font-bold hover:text-[#9BBEFF] transition-colors">Log In</button>
-                    <button class="bg-[#FFEAA0] text-[#2D4D7A] font-extrabold text-xs px-4 py-2 rounded-xl border border-[#2D4D7A]/10 hover:brightness-95 transition-all">Sign Up</button>
-                </div>
+                <button class="text-xs font-bold hover:text-[#709DFF] transition-colors">Log In</button>
+                <button class="bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-5 py-2.5 rounded-full shadow-sm hover:brightness-95 transition-all">Sign Up</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-8">
             
-            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#B7C7E6]/30 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-[#FFEAA0]/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#8A9DBB]/10 relative">
                 
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div>
-                        <span class="bg-[#FFEAA0] text-[#2D4D7A] px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border border-[#2D4D7A]/5">LIVE TRACKING ACTIVE</span>
-                        <h1 id="portfolio-value" class="text-5xl font-black tracking-tight text-[#2D4D7A] mt-2">$10,000.00</h1>
-                        <p id="portfolio-return" class="text-sm font-bold text-[#9BBEFF] mt-1">Establishing real-time algorithmic streams...</p>
+                        <span class="bg-[#FFF1C2] text-[#1E3557] px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase border border-[#1E3557]/5">LIVE TRANSFERS</span>
+                        <h1 id="portfolio-value" class="text-5xl font-black tracking-tight text-[#1E3557] mt-3">$10,000.00</h1>
+                        <p id="portfolio-return" class="text-xs font-bold text-[#709DFF] mt-1.5">Synchronizing high-frequency feeds...</p>
                     </div>
-                    <div class="bg-[#FFEAA0]/40 border border-[#FFEAA0] rounded-2xl p-4 w-full md:w-auto flex items-center justify-between md:space-x-4">
-                        <div>
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-[#2D4D7A]/70">Selected Asset</p>
-                            <select id="asset-selector" onchange="updateTradeUi()" class="bg-transparent text-sm font-black text-[#2D4D7A] focus:outline-none cursor-pointer">
+
+                    <div class="bg-[#FFF1C2]/30 border border-[#FFF1C2] rounded-2xl p-4 w-full md:w-auto flex items-center space-x-4">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold uppercase tracking-wider text-[#1E3557]/60 block">Asset</label>
+                            <select id="asset-selector" onchange="updateTradeUi()" class="bg-transparent text-xs font-black text-[#1E3557] focus:outline-none cursor-pointer">
                                 <option value="BTC">Bitcoin (BTC)</option>
                                 <option value="ETH">Ethereum (ETH)</option>
                                 <option value="SOL">Solana (SOL)</option>
                                 <option value="DOGE">Dogecoin (DOGE)</option>
                             </select>
                         </div>
-                        <div class="h-8 w-px bg-[#2D4D7A]/10"></div>
-                        <div>
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-[#2D4D7A]/70">Units</p>
-                            <input id="trade-quantity" type="number" value="0.1" step="any" min="0" oninput="calculateTotalCost()" class="w-16 bg-transparent text-sm font-black text-[#2D4D7A] focus:outline-none">
+                        <div class="h-6 w-px bg-[#1E3557]/10"></div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold uppercase tracking-wider text-[#1E3557]/60 block">Units</label>
+                            <input id="trade-quantity" type="number" value="0.1" step="any" min="0" oninput="calculateTotalCost()" class="w-14 bg-transparent text-xs font-black text-[#1E3557] focus:outline-none">
                         </div>
-                        <button onclick="executeAction()" id="main-submit-btn" class="bg-[#2D4D7A] text-white font-extrabold text-xs px-4 py-2 rounded-xl hover:opacity-90 transition-all">EXECUTE BUY</button>
+                        <button onclick="executeAction()" id="main-submit-btn" class="bg-[#1E3557] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl hover:opacity-90 transition-all">EXECUTE BUY</button>
                     </div>
                 </div>
 
-                <div class="h-64 mt-8 flex items-end justify-center border-b border-[#F2F4F7] relative">
-                    <svg class="absolute bottom-0 w-full h-48 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <path id="chart-path" d="M 0 70 L 10 65 L 20 85 L 30 50 L 40 75 L 50 60 L 60 40 L 70 65 L 80 30 L 90 45 L 100 25" fill="none" stroke="#9BBEFF" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                <div class="h-64 mt-8 px-4 flex items-end justify-center relative border-b border-[#F5F7FA]">
+                    <svg class="w-full h-full overflow-visible" viewBox="0 0 1000 250">
+                        <path id="chart-path" d="M 0 180 L 100 160 L 200 220 L 300 130 L 400 200 L 500 150 L 600 110 L 700 170 L 800 90 L 900 120 L 985 70" fill="none" stroke="#709DFF" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
                         
-                        <circle id="chart-pulse-dot" cx="100" cy="25" r="2.5" fill="#2D4D7A" class="live-dot" />
+                        <circle id="chart-pulse-glow" cx="985" cy="70" r="12" fill="#709DFF" class="pulse-ring" />
+                        <circle id="chart-pulse-dot" cx="985" cy="70" r="4.5" fill="#1E3557" />
                     </svg>
                 </div>
 
                 <div class="flex justify-between items-center mt-6">
-                    <div class="flex space-x-1 bg-[#F2F4F7] p-1 rounded-xl">
-                        <button onclick="changeTimeline('1D')" id="tl-1D" class="bg-white text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg shadow-sm transition-all">1D</button>
-                        <button onclick="changeTimeline('1W')" id="tl-1W" class="text-[#B7C7E6] hover:text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg transition-all">1W</button>
-                        <button onclick="changeTimeline('1M')" id="tl-1M" class="text-[#B7C7E6] hover:text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg transition-all">1M</button>
-                        <button onclick="changeTimeline('1Y')" id="tl-1Y" class="text-[#B7C7E6] hover:text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg transition-all">1Y</button>
+                    <div class="flex space-x-1 bg-[#F5F7FA] p-1 rounded-xl">
+                        <button onclick="changeTimeline('1D')" id="tl-1D" class="bg-white text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all">1D</button>
+                        <button onclick="changeTimeline('1W')" id="tl-1W" class="text-[#8A9DBB] hover:text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg transition-all">1W</button>
+                        <button onclick="changeTimeline('1M')" id="tl-1M" class="text-[#8A9DBB] hover:text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg transition-all">1M</button>
+                        <button onclick="changeTimeline('1Y')" id="tl-1Y" class="text-[#8A9DBB] hover:text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg transition-all">1Y</button>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold text-[#B7C7E6] block uppercase tracking-wider">Est. Execution Cost</span>
-                        <span id="trade-total-cost" class="text-sm font-black text-[#2D4D7A]">$0.00</span>
+                        <span class="text-[9px] font-bold text-[#8A9DBB] block uppercase tracking-wider">Est. Cost</span>
+                        <span id="trade-total-cost" class="text-sm font-black text-[#1E3557]">$0.00</span>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <h2 class="text-xs font-black tracking-widest text-[#B7C7E6] uppercase mb-3">Top Market Volatility Groups</h2>
+            <div class="space-y-3">
+                <h2 class="text-[10px] font-black tracking-widest text-[#8A9DBB] uppercase">Top Market Volatility</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white border-2 border-[#FFEAA0] rounded-2xl p-4 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-black text-[#2D4D7A]">BTC / Bitcoin</span>
-                            <span class="text-[10px] font-bold bg-[#FFEAA0] text-[#2D4D7A] px-2 py-0.5 rounded-md">Top Mover</span>
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                        <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
+                            <span>Bitcoin / BTC</span>
+                            <span class="bg-[#FFF1C2] px-2 py-0.5 rounded text-[9px] font-black">Mover</span>
                         </div>
-                        <p id="mover-btc-price" class="text-xl font-black text-[#2D4D7A] mt-2">$0.00</p>
-                        <span id="mover-btc-pct" class="text-xs font-bold text-[#9BBEFF]">Loading...</span>
+                        <p id="mover-btc-price" class="text-xl font-black mt-3">$0.00</p>
+                        <span id="mover-btc-pct" class="text-xs font-bold text-[#709DFF]">Loading...</span>
                     </div>
-                    <div class="bg-white border border-[#B7C7E6]/30 rounded-2xl p-4 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-black text-[#2D4D7A]">ETH / Ethereum</span>
-                            <span class="text-[10px] font-bold bg-[#F2F4F7] text-[#B7C7E6] px-2 py-0.5 rounded-md">High Volume</span>
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                        <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
+                            <span>Ethereum / ETH</span>
+                            <span class="bg-[#F5F7FA] px-2 py-0.5 rounded text-[9px] text-[#8A9DBB]">Volume</span>
                         </div>
-                        <p id="mover-eth-price" class="text-xl font-black text-[#2D4D7A] mt-2">$0.00</p>
-                        <span id="mover-eth-pct" class="text-xs font-bold text-[#9BBEFF]">Loading...</span>
+                        <p id="mover-eth-price" class="text-xl font-black mt-3">$0.00</p>
+                        <span id="mover-eth-pct" class="text-xs font-bold text-[#709DFF]">Loading...</span>
                     </div>
-                    <div class="bg-white border border-[#B7C7E6]/30 rounded-2xl p-4 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs font-black text-[#2D4D7A]">SOL / Solana</span>
-                            <span class="text-[10px] font-bold bg-[#F2F4F7] text-[#B7C7E6] px-2 py-0.5 rounded-md">Trending</span>
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                        <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
+                            <span>Solana / SOL</span>
+                            <span class="bg-[#F5F7FA] px-2 py-0.5 rounded text-[9px] text-[#8A9DBB]">Trending</span>
                         </div>
-                        <p id="mover-sol-price" class="text-xl font-black text-[#2D4D7A] mt-2">$0.00</p>
-                        <span id="mover-sol-pct" class="text-xs font-bold text-[#9BBEFF]">Loading...</span>
+                        <p id="mover-sol-price" class="text-xl font-black mt-3">$0.00</p>
+                        <span id="mover-sol-pct" class="text-xs font-bold text-[#709DFF]">Loading...</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-[#B7C7E6]/30">
-                <div class="flex justify-between items-center mb-4 border-b border-[#F2F4F7] pb-3">
-                    <h3 class="text-sm font-black uppercase tracking-wider text-[#2D4D7A]">Your Custom Invested Positions</h3>
-                    <span id="buying-power-display" class="text-xs font-bold bg-[#F2F4F7] px-3 py-1 rounded-lg">Cash Reserves: $10,000.00</span>
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-[#8A9DBB]/10">
+                <div class="flex justify-between items-center mb-4 border-b border-[#F5F7FA] pb-4">
+                    <h3 class="text-xs font-black uppercase tracking-wider text-[#1E3557]">Your Positions</h3>
+                    <span id="buying-power-display" class="text-xs font-bold bg-[#F5F7FA] px-3 py-1 rounded-full text-[#1E3557]">Cash: $10,000.00</span>
                 </div>
                 <div id="holdings-list" class="space-y-3"></div>
             </div>
         </div>
 
         <div class="space-y-6">
-            <div class="bg-[#2D4D7A] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute bottom-0 right-0 w-24 h-24 bg-[#FFEAA0]/20 rounded-full blur-2xl"></div>
-                <div class="flex items-center space-x-2 text-[#FFEAA0]">
-                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
-                    <span class="text-[10px] font-black tracking-widest uppercase">Predictive AI Trends Analysis</span>
+            <div class="bg-[#1E3557] text-white rounded-3xl p-6 shadow-sm relative overflow-hidden border border-[#1E3557]">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-[#FFF1C2]/10 rounded-full blur-2xl"></div>
+                <div class="flex items-center space-x-2 text-[#FFF1C2]">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
+                    <span class="text-[9px] font-black tracking-widest uppercase">Predictive AI Analysis</span>
                 </div>
-                <h4 class="text-lg font-black tracking-tight mt-1 text-white">Upcoming Volatility Forecasts</h4>
-                <p class="text-xs text-[#B7C7E6] mt-1 leading-relaxed">System neural scanners analyze real market shifts instantly to formulate potential simulation vectors.</p>
+                <h4 class="text-base font-black tracking-tight mt-1">Volatility Forecasts</h4>
                 
                 <div class="mt-4 space-y-3">
-                    <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+                    <div class="bg-white/5 rounded-xl p-3.5 border border-white/5">
                         <div class="flex justify-between text-xs font-bold">
-                            <span class="text-[#FFEAA0]">Bullish Breakout Potential</span>
-                            <span>88% Probability</span>
+                            <span class="text-[#FFF1C2]">Bullish Breakout</span>
+                            <span>88% Prob</span>
                         </div>
-                        <p class="text-[10px] text-[#B7C7E6] mt-1">Sustained high-velocity accumulation trends observed across top digital indicators.</p>
+                        <p class="text-[10px] text-[#8A9DBB] mt-1">High-velocity accumulation trends forming across layers.</p>
                     </div>
-                    <div class="bg-white/10 rounded-xl p-3 border border-white/10">
+                    <div class="bg-white/5 rounded-xl p-3.5 border border-white/5">
                         <div class="flex justify-between text-xs font-bold">
-                            <span class="text-rose-300">Resistance Threshold Met</span>
-                            <span>62% Probability</span>
+                            <span class="text-rose-300">Resistance Threshold</span>
+                            <span>62% Prob</span>
                         </div>
-                        <p class="text-[10px] text-[#B7C7E6] mt-1">Short-term consolidations estimated inside adjacent crypto groups.</p>
+                        <p class="text-[10px] text-[#8A9DBB] mt-1">Short-term consolidations estimated inside adjacent chains.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl p-6 shadow-sm border border-[#B7C7E6]/30">
-                <h3 class="text-xs font-black uppercase tracking-wider text-[#B7C7E6] mb-3">Selected Monitoring Streams</h3>
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-[#8A9DBB]/10">
+                <h3 class="text-xs font-black uppercase tracking-wider text-[#8A9DBB] mb-4">Monitoring Streams</h3>
                 <div id="watchlist-container" class="space-y-3"></div>
             </div>
         </div>
@@ -188,23 +168,22 @@
 
     <script>
         const API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd&include_24hr_change=true';
-        
         let currentTradeType = 'BUY'; 
 
-        let state = JSON.parse(localStorage.getItem('chic_market_state_v2')) || {
+        let state = JSON.parse(localStorage.getItem('chic_market_state_v3')) || {
             cash: 10000.00,
             holdings: {}
         };
 
         let livePrices = {
             'BTC': { price: 65000, change: 1.5 },
-            'ETH': { price: 35000, change: -0.4 },
+            'ETH': { price: 3500, change: -0.4 },
             'SOL': { price: 150, change: 4.2 },
             'DOGE': { price: 0.12, change: 0.8 }
         };
 
         function saveState() {
-            localStorage.setItem('chic_market_state_v2', JSON.stringify(state));
+            localStorage.setItem('chic_market_state_v3', JSON.stringify(state));
         }
 
         function setTradeType(type) {
@@ -214,15 +193,15 @@
             const submitBtn = document.getElementById('main-submit-btn');
 
             if (type === 'BUY') {
-                buyBtn.className = "bg-[#2D4D7A] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm";
-                sellBtn.className = "bg-white text-[#2D4D7A] border border-[#B7C7E6] text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#F2F4F7] transition-all";
+                buyBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
+                sellBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
                 submitBtn.innerText = "EXECUTE BUY";
-                submitBtn.className = "bg-[#2D4D7A] text-white font-extrabold text-xs px-4 py-2 rounded-xl hover:opacity-90 transition-all";
+                submitBtn.className = "bg-[#1E3557] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl hover:opacity-90 transition-all";
             } else {
-                sellBtn.className = "bg-[#2D4D7A] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm";
-                buyBtn.className = "bg-white text-[#2D4D7A] border border-[#B7C7E6] text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#F2F4F7] transition-all";
+                sellBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
+                buyBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
                 submitBtn.innerText = "EXECUTE SELL";
-                submitBtn.className = "bg-[#FFEAA0] text-[#2D4D7A] font-black text-xs px-4 py-2 rounded-xl hover:brightness-95 transition-all";
+                submitBtn.className = "bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-4 py-2.5 rounded-xl hover:brightness-95 transition-all";
             }
         }
 
@@ -238,13 +217,13 @@
                     livePrices['DOGE'] = { price: data.dogecoin.usd || 0.12, change: data.dogecoin.usd_24h_change || 0 };
                 }
             } catch (err) {
-                console.error("Using asset fallbacks during sync delay...", err);
+                console.error("Fallback delay sync active", err);
             }
             updateUiCore();
         }
 
         function updateUiCore() {
-            document.getElementById('buying-power-display').innerText = `Cash Reserves: $${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('buying-power-display').innerText = `Cash: $${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             
             let currentHoldingsValue = 0;
             for (const [ticker, assetData] of Object.entries(state.holdings)) {
@@ -261,10 +240,20 @@
             let sign = totalProfit >= 0 ? '+' : '';
             document.getElementById('portfolio-return').innerText = `${sign}$${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2})} (${sign}${profitPercent.toFixed(2)}%) Today`;
 
-            // Adjust pulse indicator dot fill color based on profit outcome
             const pulseDot = document.getElementById('chart-pulse-dot');
-            if(pulseDot) {
-                pulseDot.setAttribute('fill', totalProfit >= 0 ? '#2D4D7A' : '#f43f5e');
+            const pulseGlow = document.getElementById('chart-pulse-glow');
+            const chartPath = document.getElementById('chart-path');
+            const returnText = document.getElementById('portfolio-return');
+
+            const upColor = '#709DFF';
+            const downColor = '#F43F5E';
+            const activeColor = totalProfit >= 0 ? upColor : downColor;
+
+            if(pulseDot) pulseDot.setAttribute('fill', '#1E3557');
+            if(pulseGlow) pulseGlow.setAttribute('fill', activeColor);
+            if(chartPath) chartPath.setAttribute('stroke', activeColor);
+            if(returnText) {
+                returnText.className = `text-xs font-bold mt-1.5 ${totalProfit >= 0 ? 'text-[#709DFF]' : 'text-rose-500'}`;
             }
 
             document.getElementById('mover-btc-price').innerText = `$${livePrices['BTC'].price.toLocaleString()}`;
@@ -285,14 +274,14 @@
                     let returnVal = currentVal - assetData.totalCost;
                     
                     holdingsList.innerHTML += `
-                        <div class="flex justify-between items-center bg-[#F2F4F7]/60 p-4 rounded-xl border border-[#B7C7E6]/20">
+                        <div class="flex justify-between items-center bg-[#F5F7FA] p-4 rounded-xl border border-[#8A9DBB]/10">
                             <div>
-                                <p class="font-black text-sm text-[#2D4D7A]">${ticker}</p>
-                                <p class="text-[11px] font-bold text-[#B7C7E6]">${assetData.qty.toFixed(4)} Units owned</p>
+                                <p class="font-black text-sm text-[#1E3557]">${ticker}</p>
+                                <p class="text-[10px] font-bold text-[#8A9DBB]">${assetData.qty.toFixed(4)} Units owned</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-black text-sm text-[#2D4D7A]">$${currentVal.toFixed(2)}</p>
-                                <p class="text-[10px] font-black px-2 py-0.5 rounded-md ${returnVal >= 0 ? 'bg-[#9BBEFF]/20 text-[#2D4D7A]' : 'bg-rose-100 text-rose-500'}">${returnVal >= 0 ? '+' : ''}$${returnVal.toFixed(2)}</p>
+                                <p class="font-black text-sm text-[#1E3557]">$${currentVal.toFixed(2)}</p>
+                                <p class="text-[10px] font-black px-2 py-0.5 rounded ${returnVal >= 0 ? 'bg-[#709DFF]/10 text-[#709DFF]' : 'bg-rose-50 text-rose-500'}">${returnVal >= 0 ? '+' : ''}$${returnVal.toFixed(2)}</p>
                             </div>
                         </div>
                     `;
@@ -300,9 +289,8 @@
             }
             if (!hasHoldings) {
                 holdingsList.innerHTML = `
-                    <div class="text-center py-6 border-2 border-dashed border-[#B7C7E6]/40 rounded-xl bg-[#F2F4F7]/30">
-                        <p class="text-xs font-bold text-[#B7C7E6]">No operational assets active yet.</p>
-                        <p class="text-[11px] text-[#B7C7E6]/80 mt-1">Use the trading quick-panel to purchase assets instantly.</p>
+                    <div class="text-center py-6 border border-dashed border-[#8A9DBB]/20 rounded-xl bg-[#F5F7FA]/50">
+                        <p class="text-xs font-bold text-[#8A9DBB]">No operational assets active yet.</p>
                     </div>
                 `;
             }
@@ -311,12 +299,12 @@
             watchlist.innerHTML = '';
             for (const [ticker, info] of Object.entries(livePrices)) {
                 watchlist.innerHTML += `
-                    <div class="flex justify-between items-center p-3 bg-[#FFEAA0]/10 border border-[#FFEAA0]/40 rounded-xl">
+                    <div class="flex justify-between items-center p-3 bg-[#FFF1C2]/20 border border-[#FFF1C2]/60 rounded-xl">
                         <div>
-                            <p class="font-black text-xs text-[#2D4D7A]">${ticker}</p>
-                            <p class="text-[10px] font-bold ${info.change >= 0 ? 'text-[#2D4D7A]' : 'text-rose-400'}">${info.change >= 0 ? '+' : ''}${info.change.toFixed(2)}%</p>
+                            <p class="font-black text-xs text-[#1E3557]">${ticker}</p>
+                            <p class="text-[10px] font-bold ${info.change >= 0 ? 'text-[#709DFF]' : 'text-rose-400'}">${info.change >= 0 ? '+' : ''}${info.change.toFixed(2)}%</p>
                         </div>
-                        <p class="font-black text-xs text-[#2D4D7A]">$${info.price.toLocaleString()}</p>
+                        <p class="font-black text-xs text-[#1E3557]">$${info.price.toLocaleString()}</p>
                     </div>
                 `;
             }
@@ -338,7 +326,7 @@
             const price = livePrices[ticker] ? livePrices[ticker].price : 0;
             const totalCost = qty * price;
 
-            if (qty <= 0) return alert("Select an explicit metric quantity.");
+            if (qty <= 0) return alert("Select an explicit quantity.");
 
             if (currentTradeType === 'BUY') {
                 if (state.cash < totalCost) return alert("Insufficient available cash liquidity.");
@@ -347,7 +335,7 @@
                 state.holdings[ticker].qty += qty;
                 state.holdings[ticker].totalCost += totalCost;
             } else {
-                if (!state.holdings[ticker] || state.holdings[ticker].qty < qty) return alert("Asset units unavailable inside execution limits.");
+                if (!state.holdings[ticker] || state.holdings[ticker].qty < qty) return alert("Asset units unavailable.");
                 let averageCost = state.holdings[ticker].totalCost / state.holdings[ticker].qty;
                 state.holdings[ticker].qty -= qty;
                 state.holdings[ticker].totalCost -= (averageCost * qty);
@@ -363,32 +351,33 @@
                 const btn = document.getElementById(`tl-${tl}`);
                 if(btn) {
                     if(tl === timeline) {
-                        btn.className = "bg-white text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg shadow-sm transition-all";
+                        btn.className = "bg-white text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all";
                     } else {
-                        btn.className = "text-[#B7C7E6] hover:text-[#2D4D7A] text-xs font-black px-3 py-1.5 rounded-lg transition-all";
+                        btn.className = "text-[#8A9DBB] hover:text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg transition-all";
                     }
                 }
             });
 
             let path = document.getElementById('chart-path');
             let pulseDot = document.getElementById('chart-pulse-dot');
+            let pulseGlow = document.getElementById('chart-pulse-glow');
             
-            if(path && pulseDot) {
+            if(path && pulseDot && pulseGlow) {
                 if (timeline === '1D') {
-                    path.setAttribute('d', 'M 0 70 L 10 65 L 20 85 L 30 50 L 40 75 L 50 60 L 60 40 L 70 65 L 80 30 L 90 45 L 100 25');
-                    pulseDot.setAttribute('cy', '25');
+                    path.setAttribute('d', 'M 0 180 L 100 160 L 200 220 L 300 130 L 400 200 L 500 150 L 600 110 L 700 170 L 800 90 L 900 120 L 985 70');
+                    pulseDot.setAttribute('cy', '70'); pulseGlow.setAttribute('cy', '70');
                 }
                 if (timeline === '1W') {
-                    path.setAttribute('d', 'M 0 35 L 15 75 L 25 50 L 40 85 L 55 20 L 70 60 L 85 45 L 100 55');
-                    pulseDot.setAttribute('cy', '55');
+                    path.setAttribute('d', 'M 0 100 L 150 200 L 300 140 L 450 230 L 600 60 L 750 160 L 900 120 L 985 150');
+                    pulseDot.setAttribute('cy', '150'); pulseGlow.setAttribute('cy', '150');
                 }
                 if (timeline === '1M') {
-                    path.setAttribute('d', 'M 0 80 L 10 70 L 25 75 L 35 50 L 50 60 L 65 30 L 80 40 L 90 15 L 100 20');
-                    pulseDot.setAttribute('cy', '20');
+                    path.setAttribute('d', 'M 0 220 L 120 180 L 250 200 L 400 120 L 550 160 L 700 90 L 850 120 L 985 50');
+                    pulseDot.setAttribute('cy', '50'); pulseGlow.setAttribute('cy', '50');
                 }
                 if (timeline === '1Y') {
-                    path.setAttribute('d', 'M 0 90 L 20 50 L 35 65 L 50 35 L 65 45 L 80 15 L 90 25 L 100 5');
-                    pulseDot.setAttribute('cy', '5');
+                    path.setAttribute('d', 'M 0 240 L 200 140 L 400 180 L 600 100 L 800 130 L 985 20');
+                    pulseDot.setAttribute('cy', '20'); pulseGlow.setAttribute('cy', '20');
                 }
             }
         }
