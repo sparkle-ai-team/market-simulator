@@ -22,6 +22,16 @@
             }
         }
     </script>
+    <style>
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.6; }
+        }
+        .live-dot {
+            transform-origin: center;
+            animation: pulse-dot 2s infinite ease-in-out;
+        }
+    </style>
 </head>
 <body class="bg-[#F2F4F7] text-[#2D4D7A] font-sans antialiased min-h-screen pb-12">
 
@@ -81,8 +91,10 @@
                 </div>
 
                 <div class="h-64 mt-8 flex items-end justify-center border-b border-[#F2F4F7] relative">
-                    <svg class="absolute bottom-0 w-full h-48" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <svg class="absolute bottom-0 w-full h-48 overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <path id="chart-path" d="M 0 70 L 10 65 L 20 85 L 30 50 L 40 75 L 50 60 L 60 40 L 70 65 L 80 30 L 90 45 L 100 25" fill="none" stroke="#9BBEFF" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter"/>
+                        
+                        <circle id="chart-pulse-dot" cx="100" cy="25" r="2.5" fill="#2D4D7A" class="live-dot" />
                     </svg>
                 </div>
 
@@ -184,7 +196,6 @@
             holdings: {}
         };
 
-        // Initialize fallback values immediately to guarantee elements load visually first
         let livePrices = {
             'BTC': { price: 65000, change: 1.5 },
             'ETH': { price: 35000, change: -0.4 },
@@ -250,7 +261,12 @@
             let sign = totalProfit >= 0 ? '+' : '';
             document.getElementById('portfolio-return').innerText = `${sign}$${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2})} (${sign}${profitPercent.toFixed(2)}%) Today`;
 
-            // RENDER VOLATILITY CARDS SAFELY
+            // Adjust pulse indicator dot fill color based on profit outcome
+            const pulseDot = document.getElementById('chart-pulse-dot');
+            if(pulseDot) {
+                pulseDot.setAttribute('fill', totalProfit >= 0 ? '#2D4D7A' : '#f43f5e');
+            }
+
             document.getElementById('mover-btc-price').innerText = `$${livePrices['BTC'].price.toLocaleString()}`;
             document.getElementById('mover-btc-pct').innerText = `${livePrices['BTC'].change >= 0 ? '+' : ''}${livePrices['BTC'].change.toFixed(2)}%`;
             document.getElementById('mover-eth-price').innerText = `$${livePrices['ETH'].price.toLocaleString()}`;
@@ -258,7 +274,6 @@
             document.getElementById('mover-sol-price').innerText = `$${livePrices['SOL'].price.toLocaleString()}`;
             document.getElementById('mover-sol-pct').innerText = `${livePrices['SOL'].change >= 0 ? '+' : ''}${livePrices['SOL'].change.toFixed(2)}%`;
 
-            // RENDER INVESTMENTS TABLE LIST SAFELY
             const holdingsList = document.getElementById('holdings-list');
             holdingsList.innerHTML = '';
             let hasHoldings = false;
@@ -292,7 +307,6 @@
                 `;
             }
 
-            // RENDER WATCHLIST SIDEBAR SAFELY
             const watchlist = document.getElementById('watchlist-container');
             watchlist.innerHTML = '';
             for (const [ticker, info] of Object.entries(livePrices)) {
@@ -357,5 +371,31 @@
             });
 
             let path = document.getElementById('chart-path');
-            if(path) {
-                if (timeline === '1D') path.setAttribute
+            let pulseDot = document.getElementById('chart-pulse-dot');
+            
+            if(path && pulseDot) {
+                if (timeline === '1D') {
+                    path.setAttribute('d', 'M 0 70 L 10 65 L 20 85 L 30 50 L 40 75 L 50 60 L 60 40 L 70 65 L 80 30 L 90 45 L 100 25');
+                    pulseDot.setAttribute('cy', '25');
+                }
+                if (timeline === '1W') {
+                    path.setAttribute('d', 'M 0 35 L 15 75 L 25 50 L 40 85 L 55 20 L 70 60 L 85 45 L 100 55');
+                    pulseDot.setAttribute('cy', '55');
+                }
+                if (timeline === '1M') {
+                    path.setAttribute('d', 'M 0 80 L 10 70 L 25 75 L 35 50 L 50 60 L 65 30 L 80 40 L 90 15 L 100 20');
+                    pulseDot.setAttribute('cy', '20');
+                }
+                if (timeline === '1Y') {
+                    path.setAttribute('d', 'M 0 90 L 20 50 L 35 65 L 50 35 L 65 45 L 80 15 L 90 25 L 100 5');
+                    pulseDot.setAttribute('cy', '5');
+                }
+            }
+        }
+
+        updateUiCore();
+        fetchMarketData();
+        setInterval(fetchMarketData, 12000);
+    </script>
+</body>
+</html>
