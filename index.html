@@ -13,7 +13,7 @@
             <div class="flex items-center space-x-6 w-full sm:w-auto">
                 <div class="text-xl font-black tracking-tighter text-[#1E3557] uppercase">ROBINHOOD<span class="text-[#709DFF] font-light">.SIM</span></div>
                 <div class="relative w-full sm:w-64">
-                    <input type="text" placeholder="Search markets..." class="w-full bg-[#F5F7FA] text-xs font-semibold rounded-full px-5 py-2.5 focus:outline-none border border-transparent focus:border-[#FFF1C2] transition-all">
+                    <input id="nav-search-bar" type="text" onkeydown="handleSearch(event)" placeholder="Type ticker & hit Enter (e.g. SOL, ETH)..." class="w-full bg-[#F5F7FA] text-xs font-semibold rounded-full px-5 py-2.5 focus:outline-none border border-transparent focus:border-[#FFF1C2] transition-all">
                 </div>
             </div>
             
@@ -22,8 +22,8 @@
                     <button onclick="setTradeType('BUY')" id="btn-toggle-buy" class="bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm">BUY</button>
                     <button onclick="setTradeType('SELL')" id="btn-toggle-sell" class="bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all">SELL</button>
                 </div>
-                <button class="text-xs font-bold hover:text-[#709DFF] transition-colors">Log In</button>
-                <button class="bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-5 py-2.5 rounded-full shadow-sm hover:brightness-95 transition-all">Sign Up</button>
+                <button onclick="triggerAuthAlert('Log In')" class="text-xs font-bold hover:text-[#709DFF] transition-colors">Log In</button>
+                <button onclick="triggerAuthAlert('Sign Up')" class="bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-5 py-2.5 rounded-full shadow-sm hover:brightness-95 transition-all">Sign Up</button>
             </div>
         </div>
     </nav>
@@ -33,6 +33,7 @@
         <div class="lg:col-span-2 space-y-8">
             
             <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-[#8A9DBB]/10 relative">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-[#FFF1C2]/20 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div>
@@ -63,7 +64,6 @@
                 <div class="h-64 mt-8 px-4 flex items-end justify-center relative border-b border-[#F5F7FA]">
                     <svg class="w-full h-full overflow-visible" viewBox="0 0 1000 250">
                         <path id="chart-path" d="M 0 180 L 100 160 L 200 220 L 300 130 L 400 200 L 500 150 L 600 110 L 700 170 L 800 90 L 900 120 L 985 70" fill="none" stroke="#709DFF" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"/>
-                        
                         <circle id="chart-pulse-dot" cx="985" cy="70" r="4.5" fill="#1E3557" />
                     </svg>
                 </div>
@@ -85,7 +85,7 @@
             <div class="space-y-3">
                 <h2 class="text-[10px] font-black tracking-widest text-[#8A9DBB] uppercase">Top Market Volatility</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm cursor-pointer" onclick="selectAssetFromCard('BTC')">
                         <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
                             <span>Bitcoin / BTC</span>
                             <span class="bg-[#FFF1C2] px-2 py-0.5 rounded text-[9px] font-black">Mover</span>
@@ -93,7 +93,7 @@
                         <p id="mover-btc-price" class="text-xl font-black mt-3">$0.00</p>
                         <span id="mover-btc-pct" class="text-xs font-bold text-[#709DFF]">Loading...</span>
                     </div>
-                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm cursor-pointer" onclick="selectAssetFromCard('ETH')">
                         <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
                             <span>Ethereum / ETH</span>
                             <span class="bg-[#F5F7FA] px-2 py-0.5 rounded text-[9px] text-[#8A9DBB]">Volume</span>
@@ -101,7 +101,7 @@
                         <p id="mover-eth-price" class="text-xl font-black mt-3">$0.00</p>
                         <span id="mover-eth-pct" class="text-xs font-bold text-[#709DFF]">Loading...</span>
                     </div>
-                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm">
+                    <div class="bg-white border border-[#8A9DBB]/10 rounded-2xl p-5 shadow-sm cursor-pointer" onclick="selectAssetFromCard('SOL')">
                         <div class="flex justify-between items-center text-xs font-bold text-[#1E3557]">
                             <span>Solana / SOL</span>
                             <span class="bg-[#F5F7FA] px-2 py-0.5 rounded text-[9px] text-[#8A9DBB]">Trending</span>
@@ -160,16 +160,15 @@
         let currentTradeType = 'BUY'; 
         let selectedTimeline = '1D';
 
-        // Bulletproof localStorage read block to completely prevent button freeze errors
         let state = { cash: 10000.00, holdings: {} };
         try {
-            const saved = localStorage.getItem('chic_market_state_v5');
+            const saved = localStorage.getItem('chic_market_state_v6');
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && typeof parsed.cash === 'number') state = parsed;
             }
         } catch (e) {
-            console.warn("Storage reset executed successfully");
+            console.warn("Storage rebooted cleanly");
         }
 
         let livePrices = {
@@ -180,220 +179,31 @@
         };
 
         function saveState() {
-            localStorage.setItem('chic_market_state_v5', JSON.stringify(state));
+            localStorage.setItem('chic_market_state_v6', JSON.stringify(state));
         }
 
-        function setTradeType(type) {
-            currentTradeType = type;
-            const buyBtn = document.getElementById('btn-toggle-buy');
-            const sellBtn = document.getElementById('btn-toggle-sell');
-            const submitBtn = document.getElementById('main-submit-btn');
-
-            if (type === 'BUY') {
-                buyBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
-                sellBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
-                submitBtn.innerText = "EXECUTE BUY";
-                submitBtn.className = "bg-[#1E3557] text-white font-extrabold text-xs px-4 py-2.5 rounded-xl hover:opacity-90 transition-all";
-            } else {
-                sellBtn.className = "bg-[#1E3557] text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-sm";
-                buyBtn.className = "bg-transparent text-[#1E3557] text-xs font-bold px-4 py-2 rounded-lg hover:bg-white/50 transition-all";
-                submitBtn.innerText = "EXECUTE SELL";
-                submitBtn.className = "bg-[#FFF1C2] text-[#1E3557] font-black text-xs px-4 py-2.5 rounded-xl hover:brightness-95 transition-all";
-            }
-        }
-
-        async function fetchMarketData() {
-            try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
+        // NEW FUNCTION: Functional Navigation Search Handler
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                const query = event.target.value.toUpperCase().trim();
+                const selector = document.getElementById('asset-selector');
                 
-                if(data && data.bitcoin) {
-                    livePrices['BTC'] = { price: data.bitcoin.usd || 65000, change: data.bitcoin.usd_24h_change || 0 };
-                    livePrices['ETH'] = { price: data.ethereum.usd || 3500, change: data.ethereum.usd_24h_change || 0 };
-                    livePrices['SOL'] = { price: data.solana.usd || 150, change: data.solana.usd_24h_change || 0 };
-                    livePrices['DOGE'] = { price: data.dogecoin.usd || 0.12, change: data.dogecoin.usd_24h_change || 0 };
-                }
-            } catch (err) {
-                console.error("Connection sync delay active", err);
-            }
-            updateUiCore();
-        }
-
-        function updateUiCore() {
-            document.getElementById('buying-power-display').innerText = `Cash: $${state.cash.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-            
-            let currentHoldingsValue = 0;
-            for (const [ticker, assetData] of Object.entries(state.holdings)) {
-                if (assetData && assetData.qty > 0 && livePrices[ticker]) {
-                    currentHoldingsValue += assetData.qty * livePrices[ticker].price;
+                if (livePrices[query]) {
+                    selector.value = query;
+                    updateTradeUi();
+                    event.target.value = ''; // Clean bar input field
+                    alert(`Now tracking metrics stream for: ${query}`);
+                } else {
+                    alert(`Ticker Symbol "${query}" not found. Try BTC, ETH, SOL, or DOGE.`);
                 }
             }
-
-            let totalPortfolioValue = state.cash + currentHoldingsValue;
-            document.getElementById('portfolio-value').innerText = `$${totalPortfolioValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-            let totalProfit = totalPortfolioValue - 10000.00;
-            let profitPercent = (totalProfit / 10000.00) * 100;
-            let sign = totalProfit >= 0 ? '+' : '';
-            document.getElementById('portfolio-return').innerText = `${sign}$${totalProfit.toLocaleString(undefined, {minimumFractionDigits: 2})} (${sign}${profitPercent.toFixed(2)}%) Today`;
-
-            const pulseDot = document.getElementById('chart-pulse-dot');
-            const chartPath = document.getElementById('chart-path');
-            const returnText = document.getElementById('portfolio-return');
-
-            const upColor = '#709DFF';
-            const downColor = '#F43F5E';
-            const activeColor = totalProfit >= 0 ? upColor : downColor;
-
-            if(pulseDot) pulseDot.setAttribute('fill', '#1E3557');
-            if(chartPath) chartPath.setAttribute('stroke', activeColor);
-            if(returnText) {
-                returnText.className = `text-xs font-bold mt-1.5 ${totalProfit >= 0 ? 'text-[#709DFF]' : 'text-rose-500'}`;
-            }
-
-            document.getElementById('mover-btc-price').innerText = `$${livePrices['BTC'].price.toLocaleString()}`;
-            document.getElementById('mover-btc-pct').innerText = `${livePrices['BTC'].change >= 0 ? '+' : ''}${livePrices['BTC'].change.toFixed(2)}%`;
-            document.getElementById('mover-eth-price').innerText = `$${livePrices['ETH'].price.toLocaleString()}`;
-            document.getElementById('mover-eth-pct').innerText = `${livePrices['ETH'].change >= 0 ? '+' : ''}${livePrices['ETH'].change.toFixed(2)}%`;
-            document.getElementById('mover-sol-price').innerText = `$${livePrices['SOL'].price.toLocaleString()}`;
-            document.getElementById('mover-sol-pct').innerText = `${livePrices['SOL'].change >= 0 ? '+' : ''}${livePrices['SOL'].change.toFixed(2)}%`;
-
-            const holdingsList = document.getElementById('holdings-list');
-            holdingsList.innerHTML = '';
-            let hasHoldings = false;
-
-            for (const [ticker, assetData] of Object.entries(state.holdings)) {
-                if (assetData && assetData.qty > 0 && livePrices[ticker]) {
-                    hasHoldings = true;
-                    let currentVal = assetData.qty * livePrices[ticker].price;
-                    let returnVal = currentVal - assetData.totalCost;
-                    
-                    holdingsList.innerHTML += `
-                        <div class="flex justify-between items-center bg-[#F5F7FA] p-4 rounded-xl border border-[#8A9DBB]/10">
-                            <div>
-                                <p class="font-black text-sm text-[#1E3557]">${ticker}</p>
-                                <p class="text-[10px] font-bold text-[#8A9DBB]">${assetData.qty.toFixed(4)} Units owned</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-black text-sm text-[#1E3557]">$${currentVal.toFixed(2)}</p>
-                                <p class="text-[10px] font-black px-2 py-0.5 rounded ${returnVal >= 0 ? 'bg-[#709DFF]/10 text-[#709DFF]' : 'bg-rose-50 text-rose-500'}">${returnVal >= 0 ? '+' : ''}$${returnVal.toFixed(2)}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-            if (!hasHoldings) {
-                holdingsList.innerHTML = `
-                    <div class="text-center py-6 border border-dashed border-[#8A9DBB]/20 rounded-xl bg-[#F5F7FA]/50">
-                        <p class="text-xs font-bold text-[#8A9DBB]">No operational assets active yet.</p>
-                    </div>
-                `;
-            }
-
-            const watchlist = document.getElementById('watchlist-container');
-            watchlist.innerHTML = '';
-            for (const [ticker, info] of Object.entries(livePrices)) {
-                watchlist.innerHTML += `
-                    <div class="flex justify-between items-center p-3 bg-[#FFF1C2]/20 border border-[#FFF1C2]/60 rounded-xl">
-                        <div>
-                            <p class="font-black text-xs text-[#1E3557]">${ticker}</p>
-                            <p class="text-[10px] font-bold ${info.change >= 0 ? 'text-[#709DFF]' : 'text-rose-400'}">${info.change >= 0 ? '+' : ''}${info.change.toFixed(2)}%</p>
-                        </div>
-                        <p class="font-black text-xs text-[#1E3557]">$${info.price.toLocaleString()}</p>
-                    </div>
-                `;
-            }
-
-            calculateTotalCost();
-            renderDynamicTrajectory();
         }
 
-        function calculateTotalCost() {
-            const currentSelected = document.getElementById('asset-selector').value;
-            const qty = parseFloat(document.getElementById('trade-quantity').value) || 0;
-            const price = livePrices[currentSelected] ? livePrices[currentSelected].price : 0;
-            const cost = qty * price;
-            document.getElementById('trade-total-cost').innerText = `$${cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        function selectAssetFromCard(ticker) {
+            document.getElementById('asset-selector').value = ticker;
+            updateTradeUi();
         }
 
-        function executeAction() {
-            const ticker = document.getElementById('asset-selector').value;
-            const qty = parseFloat(document.getElementById('trade-quantity').value) || 0;
-            const price = livePrices[ticker] ? livePrices[ticker].price : 0;
-            const totalCost = qty * price;
-
-            if (qty <= 0) return alert("Select a valid structural quantity.");
-
-            if (currentTradeType === 'BUY') {
-                if (state.cash < totalCost) return alert("Insufficient cash reserves.");
-                state.cash -= totalCost;
-                if (!state.holdings[ticker]) state.holdings[ticker] = { qty: 0, totalCost: 0 };
-                state.holdings[ticker].qty += qty;
-                state.holdings[ticker].totalCost += totalCost;
-            } else {
-                if (!state.holdings[ticker] || state.holdings[ticker].qty < qty) return alert("Units unavailable.");
-                let averageCost = state.holdings[ticker].totalCost / state.holdings[ticker].qty;
-                state.holdings[ticker].qty -= qty;
-                state.holdings[ticker].totalCost -= (averageCost * qty);
-                state.cash += totalCost;
-            }
-
-            saveState();
-            updateUiCore();
-        }
-
-        function changeTimeline(timeline) {
-            selectedTimeline = timeline;
-            ['1D', '1W', '1M', '1Y'].forEach(tl => {
-                const btn = document.getElementById(`tl-${tl}`);
-                if(btn) {
-                    if(tl === timeline) {
-                        btn.className = "bg-white text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all";
-                    } else {
-                        btn.className = "text-[#8A9DBB] hover:text-[#1E3557] text-xs font-bold px-3 py-1.5 rounded-lg transition-all";
-                    }
-                }
-            });
-            renderDynamicTrajectory();
-        }
-
-        function renderDynamicTrajectory() {
-            const ticker = document.getElementById('asset-selector').value;
-            const change = livePrices[ticker] ? livePrices[ticker].change : 0;
-            
-            let path = document.getElementById('chart-path');
-            let pulseDot = document.getElementById('chart-pulse-dot');
-            
-            if(!path || !pulseDot) return;
-
-            // Generate exact jagged lines tied directly to real stock performance states
-            let points = [];
-            let timelineMultiplier = selectedTimeline === '1D' ? 1 : selectedTimeline === '1W' ? 2.5 : selectedTimeline === '1M' ? -1.8 : 4;
-            let calculatedEndCoordinate = 125 - (change * 15 * timelineMultiplier);
-            calculatedEndCoordinate = Math.max(20, Math.min(230, calculatedEndCoordinate));
-
-            if (selectedTimeline === '1D') {
-                points = [[0,180], [100,160], [200,220], [300,130], [400,200], [500,150], [600,110], [700,170], [800,90], [900,120], [985, calculatedEndCoordinate]];
-            } else if (selectedTimeline === '1W') {
-                points = [[0,100], [150,200], [300,140], [450,230], [600,60], [750,160], [900,120], [985, calculatedEndCoordinate]];
-            } else if (selectedTimeline === '1M') {
-                points = [[0,220], [120,180], [250,200], [400,120], [550,160], [700,90], [850,120], [985, calculatedEndCoordinate]];
-            } else if (selectedTimeline === '1Y') {
-                points = [[0,240], [200,140], [400,180], [600,100], [800,130], [985, calculatedEndCoordinate]];
-            }
-
-            let dString = `M ${points[0][0]} ${points[0][1]}`;
-            for(let i=1; i<points.length; i++) {
-                dString += ` L ${points[i][0]} ${points[i][1]}`;
-            }
-
-            path.setAttribute('d', dString);
-            pulseDot.setAttribute('cy', calculatedEndCoordinate.toString());
-        }
-
-        updateUiCore();
-        fetchMarketData();
-        setInterval(fetchMarketData, 12000);
-    </script>
-</body>
-</html>
+        // NEW FUNCTION: Auth elements popups mock systems
+        function triggerAuthAlert(type) {
+            alert(`
