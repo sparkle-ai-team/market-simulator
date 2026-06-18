@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Terminal | Robinhood Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#F5F7FA] text-[#1E3557] font-sans antialiased min-h-screen pb-16">
+
+    <nav class="bg-white border-b border-[#8A9DBB]/20 px-6 py-4 mb-8">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <a href="../" class="text-xl font-black tracking-tighter uppercase">ROBINHOOD<span class="text-[#709DFF] font-light">.SIM</span></a>
+            <a href="../" class="text-xs font-bold text-[#8A9DBB] hover:text-[#1E3557]">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto p-4 space-y-6">
+        <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#8A9DBB]/10">
+            <h1 id="stock-title" class="text-4xl font-black tracking-tight">ASSET STREAM</h1>
+            <p id="stock-price" class="text-2xl font-bold text-[#709DFF] mt-2">$0.00</p>
+            
+            <div class="h-48 mt-6 flex items-end relative border-b border-[#F5F7FA]">
+                <svg class="w-full h-full overflow-visible" viewBox="0 0 1000 200">
+                    <path d="M 0 150 L 200 80 L 400 160 L 600 40 L 800 120 L 1000 30" fill="none" stroke="#FFF1C2" stroke-width="3"/>
+                    <path d="M 0 120 L 200 140 L 400 90 L 600 110 L 800 50 L 1000 60" fill="none" stroke="#709DFF" stroke-width="2"/>
+                </svg>
+            </div>
+            <div class="flex space-x-4 mt-3 text-[10px] font-bold text-[#8A9DBB]">
+                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#FFF1C2] mr-1.5"></span> 1Y Macro Trend</span>
+                <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-[#709DFF] mr-1.5"></span> 1M Local Volatility</span>
+            </div>
+        </div>
+
+        <div class="bg-[#1E3557] text-white rounded-3xl p-6 shadow-sm">
+            <h3 class="text-xs font-black uppercase tracking-widest text-[#FFF1C2]">AI Asset Analysis</h3>
+            <p class="text-sm font-semibold mt-3">Current data arrays indicate high accumulation support bands. Volume trends lean toward positive local consolidation vectors over the next cycle interval.</p>
+        </div>
+    </main>
+
+    <script>
+        // Parse what asset the user is looking for from the web link parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const ticker = urlParams.get('ticker') || 'BTC';
+        document.getElementById('stock-title').innerText = ticker + " / Market Insights";
+
+        // Read real price directly out of shared storage
+        try {
+            const rawPrices = fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,dogecoin&vs_currencies=usd')
+                .then(res => res.json())
+                .then(data => {
+                    let nameMap = {'BTC':'bitcoin', 'ETH':'ethereum', 'SOL':'solana', 'DOGE':'dogecoin'};
+                    let price = data[nameMap[ticker]].usd;
+                    document.getElementById('stock-price').innerText = "$" + price.toLocaleString();
+                });
+        } catch(e) {}
+    </script>
+</body>
+</html>
